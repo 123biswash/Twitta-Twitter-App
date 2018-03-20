@@ -13,8 +13,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
     var tweets: [Tweet] = []
     
     @IBOutlet weak var tableView: UITableView!
-    
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         let refreshControl = UIRefreshControl()
@@ -42,9 +41,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TweetCell", for: indexPath) as! TweetCell
-        
         cell.tweet = tweets[indexPath.row]
-        
         return cell
     }
     
