@@ -9,6 +9,7 @@ target 'twitter_alamofire_demo' do
   pod 'Alamofire', '~> 4.6'
   pod 'OAuthSwift'
   pod 'OAuthSwiftAlamofire'
+  pod 'RSKPlaceholderTextView'
   pod 'KeychainAccess'
   pod 'TTTAttributedLabel'
   pod 'AlamofireImage', '~> 3.3'
