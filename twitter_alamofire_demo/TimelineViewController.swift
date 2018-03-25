@@ -8,7 +8,7 @@
 
 import UIKit
 
-class TimelineViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class TimelineViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, ComposeViewControllerDelegate {
     
     var tweets: [Tweet] = []
     
@@ -54,6 +54,10 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
         // Dispose of any resources that can be recreated.
     }
     
+    func did(post: Tweet) {
+        
+    }
+    
     
     @IBAction func didTapLogout(_ sender: Any) {
         APIManager.shared.logout()
@@ -80,9 +84,18 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
         }
         //task.resume()
     
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "detailSegue" {
+            let cell = sender as! UITableViewCell
+            if let indexPath = tableView.indexPath(for: cell) {
+                let detailVC = segue.destination as! DetailViewController
+                let sendTweet = tweets[indexPath.row]
+                detailVC.tweet = sendTweet
+            }
+        }
+    }
     
     
-
     /*
      // MARK: - Navigation
      
@@ -92,5 +105,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
      // Pass the selected object to the new view controller.
      }
      */
+    
+
     
 }

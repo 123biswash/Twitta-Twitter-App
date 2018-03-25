@@ -9,21 +9,35 @@
 import UIKit
 
 
-protocol ComposeViewControllerDelegate {
+protocol ComposeViewControllerDelegate: class {
     func did(post: Tweet)
 }
 
 
-class ComposeViewController: UIViewController {
-    
-    //weak var delegate: ComposeViewControllerDelegate?
+class ComposeViewController: UIViewController, UITextViewDelegate {
 
     @IBOutlet weak var image: UIImageView!
-    @IBOutlet weak var name: UILabel!
+    
     @IBOutlet weak var tweetText: UITextView!
     
+    @IBOutlet weak var tweetCount: UIBarButtonItem!
+    
+    @IBOutlet weak var tweetButton: UIBarButtonItem!
+    
+    weak var delegate: ComposeViewControllerDelegate!
+    
+    var initialtext = ""
     
     override func viewDidLoad() {
+        tweetText.delegate = self
+        
+        let myPhotoUrl = User.current?.profilePicUrl
+        let profilePhotoUrl = URL(string: myPhotoUrl!)
+        image.af_setImage(withURL: profilePhotoUrl!)
+        
+        tweetText.text = initialtext
+        
+        
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
@@ -34,7 +48,35 @@ class ComposeViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        // TODO: Check the proposed new text character count
+        // Allow or disallow the new text
+        // Set the max character limit
+        let characterLimit = 140
+        
+        // Construct what the new text would be if we allowed the user's latest edit
+        let newText = NSString(string: textView.text!).replacingCharacters(in: range, with: text)
+        
+        // TODO: Update Character Count Label
+        tweetCount.title = "\(newText.characters.count)"
+        
+        // The new text should be allowed? True/False
+        return newText.characters.count < characterLimit
+        
+    }
+
+    
     @IBAction func didTapPost(_ sender: Any) {
+        if(tweetText.text != nil){
+        APIManager.shared.composeTweet(with: tweetText.text) { (tweet, error) in
+            if let error = error {
+                print("Error composing Tweet: \(error.localizedDescription)")
+            } else if let tweet = tweet {
+                self.delegate?.did(post: tweet)
+                print("Compose Tweet Success!")
+            }
+        }
+    }
         
     }
     

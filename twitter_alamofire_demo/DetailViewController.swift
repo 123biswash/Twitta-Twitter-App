@@ -11,28 +11,39 @@ import Alamofire
 import AlamofireImage
 
 class DetailViewController: UIViewController {
-
+    
     @IBOutlet weak var image: UIImageView!
     @IBOutlet weak var name: UILabel!
     @IBOutlet weak var tweetText: UILabel!
     @IBOutlet weak var retweetCountLabel: UILabel!
     @IBOutlet weak var favoriteCountLabel: UILabel!
+    @IBOutlet weak var retweetButton: UIButton!
+    @IBOutlet weak var favoriteButton: UIButton!
     
-    var tweet: Tweet! {
-        didSet {
-            let imageURL = URL(string: tweet.user.profilePicUrl!)
-            tweetText.text = tweet.text
-            image.af_setImage(withURL: imageURL!)
-            name.text = tweet.user.name
-            
-            favoriteCountLabel.text = "\(tweet.favoriteCount!)"
-            retweetCountLabel.text = "\(tweet.retweetCount)"
-        }
-    }
+    var tweet: Tweet!
+    
     override func viewDidLoad() {
+        
+        let myPhotoUrl = tweet.user.profilePicUrl
+        let profilePhotoUrl = URL(string: myPhotoUrl)
+        image.af_setImage(withURL: profilePhotoUrl!)
+        tweetText.text = tweet.text
+        name.text = tweet.user.name
+        favoriteCountLabel.text = "\(tweet.favoriteCount!)"
+        retweetCountLabel.text = "\(tweet.retweetCount)"
+        
+        if tweet.favorited! == true {
+            favoriteButton.isSelected = true
+            favoriteButton.setImage(UIImage(named: "favor-icon-red"), for: .normal)
+        }
+        
+        if tweet.retweeted == true {
+            retweetButton.isSelected = true
+            retweetButton.setImage(UIImage(named: "retweet-icon-green"), for: .normal)
+        }
+        
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
+        
     }
 
     override func didReceiveMemoryWarning() {
@@ -40,8 +51,95 @@ class DetailViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
+    @IBAction func onRetweet(_ sender: Any) {
+        if retweetButton.isSelected == true {
+            retweetButton.isSelected = false
+            retweetButton.setImage(UIImage(named: "retweet-icon"), for: .normal)
+            unRetweetTweet()
+        }else {
+            retweetButton.isSelected = true
+            retweetButton.setImage(UIImage(named: "retweet-icon-green"), for: .normal)
+            retweetTweet()
+        }
+    }
     
-    func refreshData(){
+    @IBAction func onFavorite(_ sender: Any) {
+        if favoriteButton.isSelected == true {
+            favoriteButton.isSelected = false
+            favoriteButton.setImage(UIImage(named: "favor-icon"), for: .normal)
+            unFavoriteTweet()
+        }else {
+            favoriteButton.isSelected = true
+            favoriteButton.setImage(UIImage(named: "favor-icon-red"), for: .normal)
+            favoriteTweet()
+        }
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "replySegue" {
+            let replyVC = segue.destination as! ComposeViewController
+            replyVC.initialtext = "@\(tweet.user.screenName) "
+            replyVC.tweetButton.title = "Reply"
+        }
+        else if segue.identifier == "profileSegue" {
+            let profileVC = segue.destination as! ProfileViewController
+            profileVC.user = tweet.user
+        }
+        
+    }
+    
+    func retweetTweet() {
+        APIManager.shared.retweet(tweet) { (tweet: Tweet?, error: Error?) in
+            if let  error = error {
+                print("Error retweeting tweet: \(error.localizedDescription)")
+            } else if let tweet = tweet {
+                print("Successfully retweeted the following Tweet: \n\(tweet.text)")
+                self.tweet.retweetCount += 1
+                self.tweet.retweeted = true
+                self.refreshData()
+            }
+        }
+    }
+    
+    func unRetweetTweet() {
+        APIManager.shared.unRetweet(tweet) { (tweet: Tweet?, error: Error?) in
+            if let  error = error {
+                print("Error un-retweeting tweet: \(error.localizedDescription)")
+            } else if let tweet = tweet {
+                print("Successfully un-retweeted the following Tweet: \n\(tweet.text)")
+                self.tweet.retweetCount -= 1
+                self.tweet.retweeted = false
+                self.refreshData()
+            }
+        }
+    }
+    
+    func favoriteTweet() {
+        APIManager.shared.favorite(tweet) { (tweet: Tweet?, error: Error?) in
+            if let  error = error {
+                print("Error favoriting tweet: \(error.localizedDescription)")
+            } else if let tweet = tweet {
+                print("Successfully favoriting the following Tweet: \n\(tweet.text)")
+                self.tweet.favoriteCount! += 1
+                self.tweet.favorited = true
+                self.refreshData()
+            }
+        }
+    }
+    
+    func unFavoriteTweet() {
+        APIManager.shared.favorite(tweet) { (tweet: Tweet?, error: Error?) in
+            if let  error = error {
+                print("Error un-favoriting tweet: \(error.localizedDescription)")
+            } else if let tweet = tweet {
+                print("Successfully un-favoriting the following Tweet: \n\(tweet.text)")
+                self.tweet.favoriteCount! -= 1
+                self.tweet.favorited = false
+                self.refreshData()
+            }
+        }
+    }
+    func refreshData() {
         retweetCountLabel.text = "\(tweet.retweetCount)"
         favoriteCountLabel.text = "\(tweet.favoriteCount!)"
     }
@@ -54,19 +152,6 @@ class DetailViewController: UIViewController {
         // Pass the selected object to the new view controller.
     }
     */
-    @IBAction func onReply(_ sender: Any) {
-        
-    }
-    @IBAction func onRetweet(_ sender: Any) {
-        tweet.retweeted = true
-        tweet.retweetCount = tweet.retweetCount + 1
-        retweetCountLabel.text = "\(tweet.retweetCount)"
-    }
-    @IBAction func onFavorite(_ sender: Any) {
-        tweet.favorited = true
-        tweet.favoriteCount = tweet.favoriteCount! + 1
-        favoriteCountLabel.text = "\(tweet.favoriteCount!)"
-    }
-    
+   
     
 }
